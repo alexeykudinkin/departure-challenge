@@ -13,11 +13,14 @@ const BASE_API_URL  = 'http://services.my511.org/Transit2.0';
 // _TODO: Extract token to ENV
 const SECRET        = '8fc49edc-a1d3-4e2c-b177-ee8aae6e53a7';
 
+
+function Backend() {}
+
 var xmlp = xml.Parser();
 
 function getSafe(body, name) {
   if (!body
-    ||  !body[name]) return {};
+  ||  !body[name]) return {};
 
   return body[name];
 }
@@ -25,7 +28,7 @@ function getSafe(body, name) {
 function extractList(body, name) {
   var list = getSafe(body, name);
   if (!list
-    ||  !Array.isArray(list)) return [];
+  ||  !Array.isArray(list)) return [];
 
   return list;
 }
@@ -63,7 +66,7 @@ function requestAPI(endpoint, params, cb) {
   });
 }
 
-function getAgencies(cb) {
+Backend.prototype.getAgencies = function getAgencies(cb) {
   requestAPI('/GetAgencies.aspx', {}, function (error, response, body) {
     if (error || response.statusCode != 200) {
       cb(error, response);
@@ -79,15 +82,13 @@ function getAgencies(cb) {
       cb(null, response, extractAgencies(result));
     });
   });
-}
-
-exports.getAgencies = getAgencies;
+};
 
 
 function extractRouteFrom(a, body) {
   if (!body
     ||  !body.Name
-    ||  !body.Code) return undefined;
+    ||  !body.Code) return null;
 
   return new model.Route(a, body.Name, body.Code);
 }
@@ -102,7 +103,7 @@ function extractRoutes(body) {
   });
 }
 
-function getRoutesForAgencies(agencies, cb) {
+Backend.prototype.getRoutesForAgencies = function getRoutesForAgencies(agencies, cb) {
   requestAPI(
     '/GetRoutesForAgencies.aspx',
     {
@@ -124,9 +125,7 @@ function getRoutesForAgencies(agencies, cb) {
       })
     }
   )
-}
-
-exports.getRoutesForAgencies = getRoutesForAgencies;
+};
 
 
 function extractStopFrom(r, body) {
@@ -151,7 +150,7 @@ function extractStops(body) {
   });
 }
 
-function getStopsForRoute(routes, cb) {
+Backend.prototype.getStopsForRoute = function getStopsForRoute(routes, cb) {
   requestAPI(
     '/GetStopsForRoutes.aspx',
     {
@@ -173,6 +172,6 @@ function getStopsForRoute(routes, cb) {
       })
     }
   )
-}
+};
 
-exports.getStopsForRoute = getStopsForRoute;
+exports.Backend = Backend;

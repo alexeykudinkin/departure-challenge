@@ -1,12 +1,15 @@
 
 var express = require('express');
 
-var b = require('./api/511');
+var streaming = require('./backend/511');
+var caching   = require('./backend/caching');
 
 
 // Global
 
 var app = express();
+
+var b = new caching.Backend(new streaming.Backend());
 
 
 // _TODO: Extract
@@ -31,10 +34,10 @@ stopsRouter.get(/\/nearest\/(\-?\d+(?:\.\d+)),(\-?\d+(?:\.\d+))$/, function (req
 });
 
 
-globalRouter.get('/agencies', function (req, res) {
+globalRouter.get('/agencies', function (req, res, next) {
   b.getAgencies(function (error, response, agencies) {
     if (error) {
-      next({ error: error });
+      next({ error: error.toString() });
       return
     }
 

@@ -12,6 +12,8 @@
     "express": "^4.13.4",
     "xml2js": "^0.4.16",
     "request": "^2.69.0",
-    "underscore": "^1.8.3"
+    "underscore": "^1.8.3",
+    "mongoose": "^4.4.10",
+    "async": "^2.0.0-rc.2"
   }
 }
