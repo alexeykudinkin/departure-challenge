@@ -145,7 +145,7 @@ Backend.prototype.getRoutesForAgencies = function getRoutesForAgencies(agencies,
       if (err) return callback(err, res);
 
       callback(null, null, routes.map(function (data) {
-        return new model.Route(data.agency, data.name, data.code);
+        return new model.Route(data.agency, data.name, data.code, data.directions);
       }));
     });
 

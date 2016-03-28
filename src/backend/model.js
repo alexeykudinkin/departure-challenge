@@ -29,7 +29,8 @@ function Route(agency, name, code, directions) {
 Route.schema = {
   agency: String,
   name: String,
-  code: String
+  code: String,
+  directions: [ String ]
 };
 
 exports.Route = Route;

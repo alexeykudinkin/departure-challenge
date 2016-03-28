@@ -101,7 +101,13 @@ function extractRoutes(body) {
     var a = extractAgencyFrom(aBody['$']);
 
     return extractList(extractList(aBody, 'RouteList')[0], 'Route').map(function (rBody) {
-      return extractRouteFrom(a, rBody['$']);
+      var r = extractRouteFrom(a, rBody['$']);
+
+      r.directions = extractList(extractList(rBody, 'RouteDirectionList')[0], 'RouteDirection').map(function (dBody) {
+        return extractDirection(dBody['$']);
+      });
+
+      return r;
     })
   });
 }
