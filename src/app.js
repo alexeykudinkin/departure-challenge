@@ -3,8 +3,9 @@ var express = require('express');
 
 var _ = require('underscore');
 
-var streaming = require('./backend/511');
-var caching   = require('./backend/caching');
+var streaming     = require('./backend/511');
+var rateLimiting  = require('./backend/rate-limiting');
+var caching       = require('./backend/caching');
 
 
 // Global
@@ -12,7 +13,8 @@ var caching   = require('./backend/caching');
 var app = express();
 
 var b   = new streaming.Backend();
-var cb  = new caching.Backend(b);
+var rlb = new rateLimiting.Backend(b);
+var cb  = new caching.Backend(rlb);
 
 
 // _TODO: Extract
