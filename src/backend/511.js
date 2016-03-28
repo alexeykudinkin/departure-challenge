@@ -36,8 +36,8 @@ function extractList(body, name) {
 
 function extractAgencyFrom(body) {
   if (!body
-    ||  !body.Name
-    ||  !body.Mode) return undefined;
+  ||  !body.Name
+  ||  !body.Mode) return null;
 
   return new model.Agency(body.Name, body.HasDirection === 'True', body.Mode);
 }
@@ -87,15 +87,15 @@ Backend.prototype.getAgencies = function getAgencies(cb) {
 
 function extractRouteFrom(a, body) {
   if (!body
-    ||  !body.Name
-    ||  !body.Code) return null;
+  ||  !body.Name
+  ||  !body.Code) return null;
 
   return new model.Route(a, body.Name, body.Code);
 }
 
 function extractRoutes(body) {
   return extractList(extractList(body['RTT'], 'AgencyList')[0], 'Agency').flatMap(function (aBody) {
-    var a = extractAgencyFrom(aBody);
+    var a = extractAgencyFrom(aBody['$']);
 
     return extractList(extractList(aBody, 'RouteList')[0], 'Route').map(function (rBody) {
       return extractRouteFrom(a, rBody['$']);
@@ -130,15 +130,15 @@ Backend.prototype.getRoutesForAgencies = function getRoutesForAgencies(agencies,
 
 function extractStopFrom(r, body) {
   if (!body
-    ||  !body.name
-    ||  !body.StopCode) return undefined;
+  ||  !body.name
+  ||  !body.StopCode) return undefined;
 
-  return new model.Stop(r, body.Name, body.StopCode);
+  return new model.Stop(r, body.name, body.StopCode);
 }
 
 function extractStops(body) {
   return extractList(extractList(body['RTT'], 'AgencyList')[0], 'Agency').flatMap(function (aBody) {
-    var a = extractAgencyFrom(aBody);
+    var a = extractAgencyFrom(aBody['$']);
 
     return extractList(extractList(aBody, 'RouteList')[0], 'Route').flatMap(function (rBody) {
       var r = extractRouteFrom(a, rBody['$']);
@@ -150,7 +150,7 @@ function extractStops(body) {
   });
 }
 
-Backend.prototype.getStopsForRoute = function getStopsForRoute(routes, cb) {
+Backend.prototype.getStopsForRoutes = function getStopsForRoutes(routes, cb) {
   requestAPI(
     '/GetStopsForRoutes.aspx',
     {
