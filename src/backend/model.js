@@ -19,14 +19,15 @@ Agency.schema = {
 exports.Agency = Agency;
 
 
-function Route(agency, name, code) {
+function Route(agency, name, code, directions) {
   this.agency = agency;
   this.name = name;
   this.code = code;
+  this.directions = directions;
 }
 
 Route.schema = {
-  agency: { type: mongoose.Schema.Types.ObjectId, ref: 'Agency' },
+  agency: String,
   name: String,
   code: String
 };
@@ -34,14 +35,15 @@ Route.schema = {
 exports.Route = Route;
 
 
-function Stop(route, name, code) {
+function Stop(route, name, code, direction) {
   this.route = route;
   this.name = name;
   this.code = code;
+  this.direction = direction;
 }
 
 Stop.schema = {
-  route: { type: mongoose.Schema.Types.ObjectId, ref: 'Route' },
+  route: String,
   name: String,
   code: String
 };
@@ -55,7 +57,7 @@ function Departure(stop, time) {
 }
 
 Departure.schema = {
-  stop: { type: mongoose.Schema.Types.ObjectId, ref: 'Stop' },
+  stop: String,
   time: Number
 };
 

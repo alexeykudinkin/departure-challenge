@@ -26,9 +26,9 @@ function days(n) {
 }
 
 const CACHING_POLICIES = {
-  getAgencies:          cachingPolicy(days(14)),
-  getRoutesForAgencies: cachingPolicy(days(14)),
-  getStopsForRoutes:    cachingPolicy(days(14)),
+  getAgencies:          cachingPolicy(days(1)),
+  getRoutesForAgencies: cachingPolicy(days(1)),
+  getStopsForRoutes:    cachingPolicy(days(1)),
   getDeparturesForStop: cachingPolicy(seconds(30))
 };
 
@@ -43,47 +43,53 @@ function Backend(backing) {
   this.backing = backing;
 }
 
-function queryStorageOrRefill(model, cachingPolicy, refill, cb) {
-  model.count(function (err, total) {
-    if (err) return cb(err);
+function queryStorageOrRefill(model, query, cachingPolicy, refill, cb) {
+  query .where('updatedAt').gte(cachingPolicy())
+        .exec(function (err, values) {
+          if (err) return cb(err);
 
-    model.where('updatedAt').gte(cachingPolicy())
-      .count(function (err, active) {
-        if (err) return cb(err);
-
-        // Check whether we have some of the documents 'staled'
-        // and flush if necessary
-        if (active !== total || total === 0) {
-          model.remove(function (err) {
+          query.count(function (err, total) {
             if (err) return cb(err);
 
-            refill(function (values) {
-              async.each(
-                values,
+            var actual = values.length;
 
-                function (data, callback) {
-                  new model(data).save(function (err) {
-                    if (err) return callback(err);
-                    callback(); // Ok
-                  });
-                },
+            // _TODO: Make proper logging
+            console.log('[STOR]: Queried: \'' + model.modelName + '\' #Actual =', actual, '; #Total =', total);
 
-                function (err) {
-                  if (err) return cb(err);
-                  cb(null, null, values);
-                }
-              );
-            }, cb);
+            // Check whether we have some of the documents 'staled'
+            // and flush if necessary
+            if (actual !== total || total === 0) {
+              model.remove(function (err) {
+                if (err) return cb(err);
+
+                refill(function (values) {
+
+                  // _TODO: Make proper logging
+                  console.log('[STOR]: Stored: \'' + model.modelName + '\' # =', values.length);
+
+                  async.each(
+                    values,
+
+                    function (data, callback) {
+                      new model(data).save(function (err) {
+                        if (err) return callback(err);
+                        callback(); // Ok
+                      });
+                    },
+
+                    function (err) {
+                      if (err) return cb(err);
+                      cb(null, null, values);
+                    }
+                  );
+                }, cb);
+              });
+
+              return
+            }
+
+            return cb(null, null, values);
           });
-
-          return
-        }
-
-        model .find({})
-              .exec(function (err, values) {
-                return cb(null, null, values);
-              })
-      });
   })
 }
 
@@ -92,6 +98,8 @@ Backend.prototype.getAgencies = function getAgencies(callback) {
 
   queryStorageOrRefill(
     Agency,
+    Agency.where(),
+
     CACHING_POLICIES['getAgencies'],
 
     function (store, cb) {
@@ -116,34 +124,20 @@ Backend.prototype.getRoutesForAgencies = function getRoutesForAgencies(agencies,
 
   queryStorageOrRefill(
     Route,
+    Route .where('agency')
+          .in(agencies.map(function (a) { return a.name; })),
+
     CACHING_POLICIES['getRoutesForAgencies'],
 
     function (store, cb) {
       self.backing.getRoutesForAgencies(agencies, function (err, response, routes) {
         if (err) return cb(err, response);
 
-        async.reduce(
-          agencies, {},
-
-          function (acc, agency, callback) {
-            Agency.findOne({ name: agency.name }, function (err, doc) {
-              if (err) callback(err);
-
-              acc[agency.name] = doc;
-
-              callback(null, acc); // Ok
-            });
-          },
-
-          function (err, agenciesMap) {
-            if (err) callback(err);
-
-            store(
-              routes.map(function (r) {
-                return _.extend(r, { agency: agenciesMap[r.agency.name]._id })
-              })
-            );
-          });
+        store(
+          routes.map(function (r) {
+            return _.extend(r, { agency: r.agency.name })
+          })
+        );
       });
     },
 
@@ -157,45 +151,29 @@ Backend.prototype.getRoutesForAgencies = function getRoutesForAgencies(agencies,
 
 };
 
-function encodeRouteURI(route) {
-  return route.agency.name + ":" + route.code;
+function encodeRouteURI(route, direction) {
+  return route.agency.name + ":" + route.code + (direction ? ':' + direction : '');
 }
 
-Backend.prototype.getStopsForRoutes = function getStopsForRoutes(routes, callback) {
+Backend.prototype.getStopsForRoutes = function getStopsForRoutes(routes, directions, callback) {
   var self = this;
 
   queryStorageOrRefill(
     Stop,
+    Stop.where('route')
+        .in(routes.map(function (r, i) { return encodeRouteURI(r, directions[i]); })),
+
     CACHING_POLICIES['getStopsForRoutes'],
 
     function (store, cb) {
-      self.backing.getStopsForRoutes(routes, function (err, response, stops) {
+      self.backing.getStopsForRoutes(routes, directions, function (err, response, stops) {
         if (err) return cb(err, response);
 
-        async.reduce(
-          routes, {},
-
-          function (acc, route, callback) {
-            Route .findOne({ code: route.code })
-                  .populate('agency', 'name')
-                  .exec(function (err, doc) {
-                    if (err) callback(err);
-
-                    acc[encodeRouteURI(route)] = doc;
-
-                    callback(null, acc); // Ok
-                  });
-          },
-
-          function (err, routesMap) {
-            if (err) callback(err);
-
-            store(
-              stops.map(function (s) {
-                return _.extend(s, { route: routesMap[encodeRouteURI(s.route)]._id })
-              })
-            );
-          });
+        store(
+          stops.map(function (s) {
+            return _.extend(s, { route: encodeRouteURI(s.route, s.direction) })
+          })
+        )
       });
     },
 
@@ -214,28 +192,20 @@ Backend.prototype.getDeparturesForStop = function getDeparturesForStop(stop, cal
 
   queryStorageOrRefill(
     Departure,
+    Departure .where('stop')
+              .e(stop.code),
+
     CACHING_POLICIES['getDeparturesForStop'],
 
     function (store, cb) {
       self.backing.getDeparturesForStop(stop, function (err, response, departures) {
         if (err) return cb(err, response);
 
-        Stop.findOne({ code: stop.code })
-            // .populate('route', 'agency')
-            .exec(function (err, doc) {
-              if (err) callback(err);
-
-              console.log("X: ", stop);
-              console.log("X: ", doc);
-
-              store(
-                departures.map(function (d) {
-                  return _.extend(d, { stop: doc._id })
-                })
-              );
-
-              callback(null, departures); // Ok
-            });
+        store(
+          departures.map(function (d) {
+            return _.extend(d, { stop: stop.code })
+          })
+        );
       });
     },
 
