@@ -128,12 +128,24 @@ Backend.prototype.getRoutesForAgencies = function getRoutesForAgencies(agencies,
 };
 
 
-function extractStopFrom(r, body) {
+function extractDirection(body) {
+  if (!body) return null;
+
+  return body.Code;
+}
+
+function extractStopFrom(route, direction, body) {
   if (!body
   ||  !body.name
-  ||  !body.StopCode) return undefined;
+  ||  !body.StopCode) return null;
 
-  return new model.Stop(r, body.name, body.StopCode);
+  return new model.Stop(route, body.name, body.StopCode, direction);
+}
+
+function extractStopList(body, route, direction) {
+  return extractList(extractList(body, 'StopList')[0], 'Stop').map(function (sBody) {
+    return extractStopFrom(route, direction, sBody['$']);
+  })
 }
 
 function extractStops(body) {
@@ -143,18 +155,27 @@ function extractStops(body) {
     return extractList(extractList(aBody, 'RouteList')[0], 'Route').flatMap(function (rBody) {
       var r = extractRouteFrom(a, rBody['$']);
 
-      return extractList(extractList(rBody, 'StopList')[0], 'Stop').map(function (sBody) {
-        return extractStopFrom(r, sBody['$']);
-      })
+      if (a.directional) {
+        return extractList(extractList(rBody, 'RouteDirectionList')[0], 'RouteDirection').flatMap(function (dBody) {
+          var d = extractDirection(dBody['$']);
+          return extractStopList(dBody, r, d);
+        });
+      }
+      else {
+        return extractStopList(rBody, r);
+      }
     })
   });
 }
 
-Backend.prototype.getStopsForRoutes = function getStopsForRoutes(routes, cb) {
+function encodeRouteIDF(r, d) {
+  return r.agency.name + '~' + r.code + (d ? '~' + d : '');
+}
+Backend.prototype.getStopsForRoutes = function getStopsForRoutes(routes, directions, cb) {
   requestAPI(
     '/GetStopsForRoutes.aspx',
     {
-      routeIDF: routes.reduce(function (s, r, i) { return s + (i === 0 ? '' : '|') + (r.agency.name + '~' + r.code); }, '')
+      routeIDF: routes.reduce(function (s, r, i) { return s + (i === 0 ? '' : '|') + encodeRouteIDF(r, directions[i]); }, '')
     },
     function (error, response, body) {
       if (error || response.statusCode != 200) {
@@ -179,6 +200,16 @@ function extractDepartureFrom(stop, departure) {
   return new model.Departure(stop, departure);
 }
 
+function extractDepartureTimesList(body, route, direction) {
+  return extractList(extractList(body, 'StopList')[0], 'Stop').flatMap(function (sBody) {
+    var s = extractStopFrom(route, direction, sBody['$']);
+
+    return extractList(extractList(sBody, 'DepartureTimeList')[0], 'DepartureTime').map(function (dBody) {
+      return extractDepartureFrom(s, dBody['$']);
+    });
+  })
+}
+
 function extractDepartures(body) {
   return extractList(extractList(body['RTT'], 'AgencyList')[0], 'Agency').flatMap(function (aBody) {
     var a = extractAgencyFrom(aBody['$']);
@@ -186,13 +217,15 @@ function extractDepartures(body) {
     return extractList(extractList(aBody, 'RouteList')[0], 'Route').flatMap(function (rBody) {
       var r = extractRouteFrom(a, rBody['$']);
 
-      return extractList(extractList(rBody, 'StopList')[0], 'Stop').flatMap(function (sBody) {
-        var s = extractStopFrom(r, sBody['$']);
-
-        return extractList(extractList(sBody, 'DepartureTimeList')[0], 'DepartureTime').map(function (dBody) {
-           return extractDepartureFrom(s, dBody['$']);
+      if (a.directional) {
+        return extractList(extractList(rBody, 'RouteDirectionList')[0], 'RouteDirection').flatMap(function (dBody) {
+          var d = extractDirection(dBody['$']);
+          return extractDepartureTimesList(rBody, r, d);
         });
-      })
+      }
+      else {
+        return extractDepartureTimesList(rBody, r);
+      }
     })
   });
 }

@@ -107,14 +107,17 @@ function lookupRoutes(a, codes) {
 }
 
 agencyRouter.param('route', function (req, res, next, id) {
+  var split = id.split('~');
+
   req.matched = _.extend(req.matched || {}, {
-    route: lookupRoutes(req.matched.agency, [id])[0]
+    route:      lookupRoutes(req.matched.agency, [ split[0] ])[0],
+    direction:  split[1]
   });
   next();
 });
 
 agencyRouter.get('/:agency/:route/stops', function (req, res, next) {
-  cb.getStopsForRoutes([ req.matched.route ], function (error, response, routes) {
+  cb.getStopsForRoutes([ req.matched.route ], [ req.matched.direction ], function (error, response, routes) {
     if (error) {
       next({ error: error.toString() });
       return
