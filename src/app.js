@@ -9,7 +9,8 @@ var caching   = require('./backend/caching');
 
 var app = express();
 
-var b = new caching.Backend(new streaming.Backend());
+var b   = new streaming.Backend();
+var cb  = new caching.Backend(b);
 
 
 // _TODO: Extract
@@ -35,7 +36,7 @@ stopsRouter.get(/\/nearest\/(\-?\d+(?:\.\d+)),(\-?\d+(?:\.\d+))$/, function (req
 
 
 globalRouter.get('/agencies', function (req, res, next) {
-  b.getAgencies(function (error, response, agencies) {
+  cb.getAgencies(function (error, response, agencies) {
     if (error) {
       next({ error: error.toString() });
       return
@@ -62,7 +63,7 @@ globalRouter.get('/routes', function (req, res, next) {
     return
   }
 
-  b.getRoutesForAgencies(lookupAgencies(agencies), function (error, response, routes) {
+  cb.getRoutesForAgencies(lookupAgencies(agencies), function (error, response, routes) {
     if (error) {
       next({ error: error });
       return
@@ -80,9 +81,9 @@ agencyRouter.param('agency', function (req, res, next, id) {
 });
 
 agencyRouter.get('/:agency/routes', function (req, res, next) {
-  b.getRoutesForAgencies([ req.agency ], function (error, response, routes) {
+  cb.getRoutesForAgencies([ req.agency ], function (error, response, routes) {
     if (error) {
-      next({ error: error });
+      next({ error: error.toString() });
       return
     }
 
@@ -107,9 +108,9 @@ agencyRouter.param('route', function (req, res, next, id) {
 });
 
 agencyRouter.get('/:agency/:route/stops', function (req, res, next) {
-  b.getStopsForRoute([ req.r ], function (error, response, routes) {
+  cb.getStopsForRoutes([ req.r ], function (error, response, routes) {
     if (error) {
-      next({ error: error });
+      next({ error: error.toString() });
       return
     }
 
@@ -132,5 +133,5 @@ app.use('/', globalRouter);
 app.use(APIErrorHandler);
 
 app.listen(3000, function () {
-  console.log("Woo-hoo! Listenening on the port 3000!")
+  console.log("Woo-hoo! Listening on the port 3000!")
 });
