@@ -33,6 +33,10 @@ function extractList(body, name) {
   return list;
 }
 
+function checkWhetherMalformedReq(body) {
+  if (!body) return null;
+  return body['transitServiceError'];
+}
 
 function extractAgencyFrom(body) {
   if (!body
@@ -66,18 +70,17 @@ function requestAPI(endpoint, params, cb) {
   });
 }
 
+
 Backend.prototype.getAgencies = function getAgencies(cb) {
   requestAPI('/GetAgencies.aspx', {}, function (error, response, body) {
-    if (error || response.statusCode != 200) {
-      cb(error, response);
-      return
-    }
+    if (error || response.statusCode != 200) return cb(error, response);
 
     xmlp.parseString(body, function (error, result) {
-      if (error) {
-        cb(error, response);
-        return
-      }
+      if (error)
+        return cb(error, response);
+
+      var mf = checkWhetherMalformedReq(result);
+      if (mf) return cb(new Error(mf.toString()), response);
 
       cb(null, response, extractAgencies(result));
     });
@@ -110,16 +113,13 @@ Backend.prototype.getRoutesForAgencies = function getRoutesForAgencies(agencies,
       agencyNames: agencies.reduce(function (s, a, i) { return s + (i === 0 ? '' : '|') + a.name; }, '')
     },
     function (error, response, body) {
-      if (error || response.statusCode != 200) {
-        cb(error, response);
-        return
-      }
+      if (error || response.statusCode != 200) return cb(error, response);
 
       xmlp.parseString(body, function (error, result) {
-        if (error) {
-          cb(error, response);
-          return
-        }
+        if (error) return cb(error, response);
+
+        var mf = checkWhetherMalformedReq(result);
+        if (mf) return cb(new Error(mf.toString()), response);
 
         cb(null, response, extractRoutes(result));
       })
@@ -178,16 +178,13 @@ Backend.prototype.getStopsForRoutes = function getStopsForRoutes(routes, directi
       routeIDF: routes.reduce(function (s, r, i) { return s + (i === 0 ? '' : '|') + encodeRouteIDF(r, directions[i]); }, '')
     },
     function (error, response, body) {
-      if (error || response.statusCode != 200) {
-        cb(error, response);
-        return
-      }
+      if (error || response.statusCode != 200) return cb(error, response);
 
       xmlp.parseString(body, function (error, result) {
-        if (error) {
-          cb(error, response);
-          return
-        }
+        if (error) return cb(error, response);
+
+        var mf = checkWhetherMalformedReq(result);
+        if (mf) return cb(new Error(mf.toString()), response);
 
         cb(null, response, extractStops(result));
       })
@@ -238,16 +235,13 @@ Backend.prototype.getDeparturesForStop = function getDeparturesForStop(stop, cb)
     },
 
     function (error, response, body) {
-      if (error || response.statusCode != 200) {
-        cb(error, response);
-        return
-      }
+      if (error || response.statusCode != 200) return cb(error, response);
 
       xmlp.parseString(body, function (error, result) {
-        if (error) {
-          cb(error, response);
-          return
-        }
+        if (error) return cb(error, response);
+
+        var mf = checkWhetherMalformedReq(result);
+        if (mf) return cb(new Error(mf.toString()), response);
 
         cb(null, response, extractDepartures(result));
       })
