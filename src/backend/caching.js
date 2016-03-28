@@ -17,25 +17,27 @@ function cachingPolicy(ms) {
   }
 }
 
-function days(n) {
-  return n * 1000 /* millis */ * 60 * 60 * 24;
+function seconds(n) {
+  return n * 1000 /* millis */;
 }
 
-function minutes(n) {
-  return n * 1000 /* millis */ * 60;
+function days(n) {
+  return seconds(n) * 60 * 60 * 24;
 }
 
 const CACHING_POLICIES = {
   getAgencies:          cachingPolicy(days(14)),
   getRoutesForAgencies: cachingPolicy(days(14)),
-  getStopsForRoutes:    cachingPolicy(days(14))
+  getStopsForRoutes:    cachingPolicy(days(14)),
+  getDeparturesForStop: cachingPolicy(seconds(30))
 };
 
 mongoose.connect('mongodb://localhost:27017/transportation');
 
-var Agency  = mongoose.model('Agency',  new mongoose.Schema(model.Agency.schema,  { timestamps: true }));
-var Route   = mongoose.model('Route',   new mongoose.Schema(model.Route.schema,   { timestamps: true }));
-var Stop    = mongoose.model('Stop',    new mongoose.Schema(model.Stop.schema,    { timestamps: true }));
+var Agency    = mongoose.model('Agency',    new mongoose.Schema(model.Agency.schema,    { timestamps: true }));
+var Route     = mongoose.model('Route',     new mongoose.Schema(model.Route.schema,     { timestamps: true }));
+var Stop      = mongoose.model('Stop',      new mongoose.Schema(model.Stop.schema,      { timestamps: true }));
+var Departure = mongoose.model('Departure', new mongoose.Schema(model.Departure.schema, { timestamps: true }));
 
 function Backend(backing) {
   this.backing = backing;
@@ -204,8 +206,46 @@ Backend.prototype.getStopsForRoutes = function getStopsForRoutes(routes, callbac
         return new model.Route(data.agency, data.name, data.code);
       }));
     });
+};
 
 
+Backend.prototype.getDeparturesForStop = function getDeparturesForStop(stop, callback) {
+  var self = this;
+
+  queryStorageOrRefill(
+    Departure,
+    CACHING_POLICIES['getDeparturesForStop'],
+
+    function (store, cb) {
+      self.backing.getDeparturesForStop(stop, function (err, response, departures) {
+        if (err) return cb(err, response);
+
+        Stop.findOne({ code: stop.code })
+            // .populate('route', 'agency')
+            .exec(function (err, doc) {
+              if (err) callback(err);
+
+              console.log("X: ", stop);
+              console.log("X: ", doc);
+
+              store(
+                departures.map(function (d) {
+                  return _.extend(d, { stop: doc._id })
+                })
+              );
+
+              callback(null, departures); // Ok
+            });
+      });
+    },
+
+    function (err, res, departures) {
+      if (err) return callback(err, res);
+
+      callback(null, null, departures.map(function (data) {
+        return new model.Departure(data.stop, data.time);
+      }));
+    });
 };
 
 exports.Backend = Backend;

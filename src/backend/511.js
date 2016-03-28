@@ -174,4 +174,52 @@ Backend.prototype.getStopsForRoutes = function getStopsForRoutes(routes, cb) {
   )
 };
 
+
+function extractDepartureFrom(stop, departure) {
+  return new model.Departure(stop, departure);
+}
+
+function extractDepartures(body) {
+  return extractList(extractList(body['RTT'], 'AgencyList')[0], 'Agency').flatMap(function (aBody) {
+    var a = extractAgencyFrom(aBody['$']);
+
+    return extractList(extractList(aBody, 'RouteList')[0], 'Route').flatMap(function (rBody) {
+      var r = extractRouteFrom(a, rBody['$']);
+
+      return extractList(extractList(rBody, 'StopList')[0], 'Stop').flatMap(function (sBody) {
+        var s = extractStopFrom(r, sBody['$']);
+
+        return extractList(extractList(sBody, 'DepartureTimeList')[0], 'DepartureTime').map(function (dBody) {
+           return extractDepartureFrom(s, dBody['$']);
+        });
+      })
+    })
+  });
+}
+
+Backend.prototype.getDeparturesForStop = function getDeparturesForStop(stop, cb) {
+  requestAPI(
+    '/GetNextDeparturesByStopCode.aspx',
+    {
+      stopcode: stop.code
+    },
+
+    function (error, response, body) {
+      if (error || response.statusCode != 200) {
+        cb(error, response);
+        return
+      }
+
+      xmlp.parseString(body, function (error, result) {
+        if (error) {
+          cb(error, response);
+          return
+        }
+
+        cb(null, response, extractDepartures(result));
+      })
+    }
+  )
+};
+
 exports.Backend = Backend;

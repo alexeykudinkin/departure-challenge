@@ -1,6 +1,8 @@
 
 var express = require('express');
 
+var _ = require('underscore');
+
 var streaming = require('./backend/511');
 var caching   = require('./backend/caching');
 
@@ -76,12 +78,14 @@ globalRouter.get('/routes', function (req, res, next) {
 // Parameters
 
 agencyRouter.param('agency', function (req, res, next, id) {
-  req.agency = lookupAgencies([ id ])[0];
+  req.matched = _.extend(req.matched || {}, {
+    agency: lookupAgencies([ id ])[0]
+  });
   next();
 });
 
 agencyRouter.get('/:agency/routes', function (req, res, next) {
-  cb.getRoutesForAgencies([ req.agency ], function (error, response, routes) {
+  cb.getRoutesForAgencies([ req.matched.agency ], function (error, response, routes) {
     if (error) {
       next({ error: error.toString() });
       return
@@ -103,18 +107,48 @@ function lookupRoutes(a, codes) {
 }
 
 agencyRouter.param('route', function (req, res, next, id) {
-  req.r = lookupRoutes(req.agency, [ id ])[0];
+  req.matched = _.extend(req.matched || {}, {
+    route: lookupRoutes(req.matched.agency, [id])[0]
+  });
   next();
 });
 
 agencyRouter.get('/:agency/:route/stops', function (req, res, next) {
-  cb.getStopsForRoutes([ req.r ], function (error, response, routes) {
+  cb.getStopsForRoutes([ req.matched.route ], function (error, response, routes) {
     if (error) {
       next({ error: error.toString() });
       return
     }
 
     res.send(routes);
+  });
+});
+
+
+function lookupStops(route, codes) {
+  return codes.map(function (c) {
+    return {
+      code: c
+    };
+  });
+}
+
+agencyRouter.param('stop', function (req, res, next, id) {
+  req.matched = _.extend(req.matched || {}, {
+    stop: lookupStops(req.matched.route, [ id ])[0]
+  });
+
+  next();
+});
+
+agencyRouter.get('/:agency/:route/:stop/departures', function (req, res, next) {
+  cb.getDeparturesForStop(req.matched.stop, function (error, response, departures) {
+    if (error) {
+      next({ error: error.toString() });
+      return
+    }
+
+    res.send(departures);
   });
 });
 

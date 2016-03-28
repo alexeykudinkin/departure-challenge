@@ -41,9 +41,22 @@ function Stop(route, name, code) {
 }
 
 Stop.schema = {
-  route: {type: mongoose.Schema.Types.ObjectId, ref: 'Route'},
+  route: { type: mongoose.Schema.Types.ObjectId, ref: 'Route' },
   name: String,
   code: String
 };
 
 exports.Stop = Stop;
+
+
+function Departure(stop, time) {
+  this.stop = stop;
+  this.time = time;
+}
+
+Departure.schema = {
+  stop: { type: mongoose.Schema.Types.ObjectId, ref: 'Stop' },
+  time: Number
+};
+
+exports.Departure = Departure;
