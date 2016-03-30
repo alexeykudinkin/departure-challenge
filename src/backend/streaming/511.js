@@ -1,10 +1,14 @@
+/**
+ * Streaming backend being the primary source of the data served
+ *
+ */
 
 var request     = require('request');
 var querystring = require('querystring');
 var xml         = require('xml2js');
 var _           = require('underscore');
 
-var model       = require('./model');
+var model       = require('./../model');
 
 var exports = module.exports;
 
@@ -70,7 +74,11 @@ function requestAPI(endpoint, params, cb) {
   });
 }
 
-
+/**
+ * Returns list of the agencies being contributing the data
+ *
+ * @param cb callback accepting (error, response, results)
+ */
 Backend.prototype.getAgencies = function getAgencies(cb) {
   requestAPI('/GetAgencies.aspx', {}, function (error, response, body) {
     if (error || response.statusCode != 200) return cb(error, response);
@@ -112,6 +120,12 @@ function extractRoutes(body) {
   });
 }
 
+/**
+ * Returns the full list of the routs served by the `agencies` supplied
+ *
+ * @param agencies list of the agency names (unique ids)
+ * @param cb callback accepting (error, response, results)
+ */
 Backend.prototype.getRoutesForAgencies = function getRoutesForAgencies(agencies, cb) {
   requestAPI(
     '/GetRoutesForAgencies.aspx',
@@ -177,6 +191,15 @@ function extractStops(body) {
 function encodeRouteIDF(r, d) {
   return r.agency.name + '~' + r.code + (d ? '~' + d : '');
 }
+
+
+/**
+ * Returns the list of stops for the given routes (given respective directions or assuming looping otherwise)
+ *
+ * @param routes list of the routes' codes
+ * @param directions list of the directions' code for respective routes (null assumes route to be 'indirectional')
+ * @param cb callback accepting (error, response, results)
+ */
 Backend.prototype.getStopsForRoutes = function getStopsForRoutes(routes, directions, cb) {
   requestAPI(
     '/GetStopsForRoutes.aspx',
@@ -233,6 +256,13 @@ function extractDepartures(body) {
   });
 }
 
+
+/**
+ * Returns departure times estimates for the transportation upcoming to the given `stop`
+ *
+ * @param stop stop's code
+ * @param cb callback accepting (error, response, results)
+ */
 Backend.prototype.getDeparturesForStop = function getDeparturesForStop(stop, cb) {
   requestAPI(
     '/GetNextDeparturesByStopCode.aspx',

@@ -3,7 +3,7 @@ var express = require('express');
 
 var _ = require('underscore');
 
-var streaming     = require('./backend/511');
+var streaming     = require('./backend/streaming/511');
 var rateLimiting  = require('./backend/rate-limiting');
 var caching       = require('./backend/caching');
 
@@ -34,11 +34,15 @@ globalRouter.use('/agency', agencyRouter);
 
 // Stops endpoints
 
+// _TODO: Fix
 stopsRouter.get(/\/nearest\/(\-?\d+(?:\.\d+)),(\-?\d+(?:\.\d+))$/, function (req, res) {
   res.send(req.params);
 });
 
 
+//
+// Lists the whole list of the agencies providing data
+//
 globalRouter.get('/agencies', function (req, res, next) {
   cb.getAgencies(function (error, response, agencies) {
     if (error) {
@@ -58,6 +62,9 @@ function lookupAgencies(names) {
   })
 }
 
+//
+// Lists the whole list of the routes for the agencies supplied
+// 
 globalRouter.get('/routes', function (req, res, next) {
 
   var agencies = req.query['agencies'] ? req.query['agencies'].split('|') : [];
@@ -86,6 +93,10 @@ agencyRouter.param('agency', function (req, res, next, id) {
   next();
 });
 
+
+// 
+// Returns list of the routes served by the particular agency
+//
 agencyRouter.get('/:agency/routes', function (req, res, next) {
   cb.getRoutesForAgencies([ req.matched.agency ], function (error, response, routes) {
     if (error) {
@@ -118,6 +129,9 @@ agencyRouter.param('route', function (req, res, next, id) {
   next();
 });
 
+//
+// Returns the list of the stops for particular :route served by the :agency
+//
 agencyRouter.get('/:agency/:route/stops', function (req, res, next) {
   cb.getStopsForRoutes([ req.matched.route ], [ req.matched.direction ], function (error, response, routes) {
     if (error) {
@@ -146,6 +160,11 @@ agencyRouter.param('stop', function (req, res, next, id) {
   next();
 });
 
+
+//
+// Returns the most accurate departure times for the :stop of the given :route
+// (served by the :agnecy) supplied
+//
 agencyRouter.get('/:agency/:route/:stop/departures', function (req, res, next) {
   cb.getDeparturesForStop(req.matched.stop, function (error, response, departures) {
     if (error) {

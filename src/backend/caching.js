@@ -1,3 +1,6 @@
+/**
+ * Caching backend allowing to
+ */
 
 var async     = require('async');
 var mongoose  = require('mongoose');
