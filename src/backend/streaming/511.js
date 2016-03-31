@@ -8,7 +8,9 @@ var querystring = require('querystring');
 var xml         = require('xml2js');
 var _           = require('underscore');
 
-var model       = require('./../model');
+var model       = require('../model');
+
+var extensions  = require('../../util/ext');
 
 var exports = module.exports;
 
@@ -60,7 +62,7 @@ function encodeParams(params) {
   return querystring.stringify(params);
 }
 
-function requestAPI(endpoint, params, cb) {
+Backend.prototype.requestAPI = function requestAPI(endpoint, params, cb) {
   params = _.extend(params, { token: SECRET });
 
   var uri = BASE_API_URL + endpoint + '?' + encodeParams(params);
@@ -72,7 +74,7 @@ function requestAPI(endpoint, params, cb) {
     if (error)  cb(error, response);
     else        cb(error, response, body);
   });
-}
+};
 
 /**
  * Returns list of the agencies being contributing the data
@@ -80,8 +82,8 @@ function requestAPI(endpoint, params, cb) {
  * @param cb callback accepting (error, response, results)
  */
 Backend.prototype.getAgencies = function getAgencies(cb) {
-  requestAPI('/GetAgencies.aspx', {}, function (error, response, body) {
-    if (error || response.statusCode != 200) return cb(error, response);
+  this.requestAPI('/GetAgencies.aspx', {}, function (error, response, body) {
+    if (error || response && response.statusCode != 200) return cb(error, response);
 
     xmlp.parseString(body, function (error, result) {
       if (error)
@@ -90,7 +92,7 @@ Backend.prototype.getAgencies = function getAgencies(cb) {
       var mf = checkWhetherMalformedReq(result);
       if (mf) return cb(new Error(mf.toString()), response);
 
-      cb(null, response, extractAgencies(result));
+      cb(null, null, extractAgencies(result));
     });
   });
 };
@@ -127,13 +129,13 @@ function extractRoutes(body) {
  * @param cb callback accepting (error, response, results)
  */
 Backend.prototype.getRoutesForAgencies = function getRoutesForAgencies(agencies, cb) {
-  requestAPI(
+  this.requestAPI(
     '/GetRoutesForAgencies.aspx',
     {
       agencyNames: agencies.reduce(function (s, a, i) { return s + (i === 0 ? '' : '|') + a.name; }, '')
     },
     function (error, response, body) {
-      if (error || response.statusCode != 200) return cb(error, response);
+      if (error || response && response.statusCode != 200) return cb(error, response);
 
       xmlp.parseString(body, function (error, result) {
         if (error) return cb(error, response);
@@ -201,13 +203,13 @@ function encodeRouteIDF(r, d) {
  * @param cb callback accepting (error, response, results)
  */
 Backend.prototype.getStopsForRoutes = function getStopsForRoutes(routes, directions, cb) {
-  requestAPI(
+  this.requestAPI(
     '/GetStopsForRoutes.aspx',
     {
       routeIDF: routes.reduce(function (s, r, i) { return s + (i === 0 ? '' : '|') + encodeRouteIDF(r, directions[i]); }, '')
     },
     function (error, response, body) {
-      if (error || response.statusCode != 200) return cb(error, response);
+      if (error || response && response.statusCode != 200) return cb(error, response);
 
       xmlp.parseString(body, function (error, result) {
         if (error) return cb(error, response);
@@ -264,7 +266,7 @@ function extractDepartures(body) {
  * @param cb callback accepting (error, response, results)
  */
 Backend.prototype.getDeparturesForStop = function getDeparturesForStop(stop, cb) {
-  requestAPI(
+  this.requestAPI(
     '/GetNextDeparturesByStopCode.aspx',
     {
       stopcode: stop.code

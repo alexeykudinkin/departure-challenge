@@ -7,7 +7,6 @@ var streaming     = require('./backend/streaming/511');
 var rateLimiting  = require('./backend/rate-limiting');
 var caching       = require('./backend/caching');
 
-
 // Global
 
 var app = express();
@@ -16,11 +15,6 @@ var b   = new streaming.Backend();
 var rlb = new rateLimiting.Backend(b);
 var cb  = new caching.Backend(rlb);
 
-
-// _TODO: Extract
-Array.prototype.flatMap = function (cb) {
-  return this.map(cb).reduce(function (arr, c) { return arr.concat(c); }, []);
-};
 
 // Routing
 
