@@ -225,17 +225,22 @@ Backend.prototype.getStopsForRoutes = function getStopsForRoutes(routes, directi
 
 
 function extractDepartureFrom(stop, departure) {
+  if (_.isArray(departure))
+    return departure.map(function (d) { return extractDepartureFrom(stop, d); });
+  else if (_.isNaN(departure))
+    return null;
+
   return new model.Departure(stop, departure);
 }
 
 function extractDepartureTimesList(body, route, direction) {
-  return extractList(extractList(body, 'StopList')[0], 'Stop').flatMap(function (sBody) {
-    var s = extractStopFrom(route, direction, sBody['$']);
+  return extractList(extractList(body, 'StopList')[0], 'Stop')
+    .flatMap(function (sBody) {
+      var s = extractStopFrom(route, direction, sBody['$']);
 
-    return extractList(extractList(sBody, 'DepartureTimeList')[0], 'DepartureTime').map(function (dBody) {
-      return extractDepartureFrom(s, dBody['$']);
-    });
-  })
+      return extractDepartureFrom(s, getSafe(extractList(sBody, 'DepartureTimeList')[0], 'DepartureTime'));
+    })
+    .filter(function (e) { return e !== null; });
 }
 
 function extractDepartures(body) {
@@ -248,7 +253,7 @@ function extractDepartures(body) {
       if (a.directional) {
         return extractList(extractList(rBody, 'RouteDirectionList')[0], 'RouteDirection').flatMap(function (dBody) {
           var d = extractDirection(dBody['$']);
-          return extractDepartureTimesList(rBody, r, d);
+          return extractDepartureTimesList(dBody, r, d);
         });
       }
       else {
@@ -273,7 +278,7 @@ Backend.prototype.getDeparturesForStop = function getDeparturesForStop(stop, cb)
     },
 
     function (error, response, body) {
-      if (error || response.statusCode != 200) return cb(error, response);
+      if (error || response && response.statusCode != 200) return cb(error, response);
 
       xmlp.parseString(body, function (error, result) {
         if (error) return cb(error, response);
@@ -281,7 +286,9 @@ Backend.prototype.getDeparturesForStop = function getDeparturesForStop(stop, cb)
         var mf = checkWhetherMalformedReq(result);
         if (mf) return cb(new Error(mf.toString()), response);
 
-        cb(null, response, extractDepartures(result));
+        var ds = extractDepartures(result);
+
+        cb(null, response, ds);
       })
     }
   )
