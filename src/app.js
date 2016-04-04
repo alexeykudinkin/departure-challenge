@@ -3,6 +3,8 @@ var express = require('express');
 
 var _ = require('underscore');
 
+var swagger = require('swagger-jsdoc');
+
 var streaming     = require('./backend/streaming/511');
 var rateLimiting  = require('./backend/rate-limiting');
 var caching       = require('./backend/caching');
@@ -10,6 +12,30 @@ var caching       = require('./backend/caching');
 // Global
 
 var app = express();
+
+
+// Setup Swagger
+
+var opts = {
+  swaggerDefinition: {
+    info: {
+      title: 'Departure Times',
+      version: '0.0.1'
+    }
+  },
+  apis: [ './src/app.js' ]
+};
+
+var swaggerSpec = swagger(opts);
+
+app.use('/swagger', express.static('./node_modules/swagger-ui/dist'));
+app.get('/swagger.json', function(req, res) {
+  res.setHeader('Content-Type', 'application/json');
+  res.send(swaggerSpec);
+});
+
+
+// Setup backends
 
 var b   = new streaming.Backend();
 var rlb = new rateLimiting.Backend(b);
@@ -33,10 +59,12 @@ stopsRouter.get(/\/nearest\/(\-?\d+(?:\.\d+)),(\-?\d+(?:\.\d+))$/, function (req
   res.send(req.params);
 });
 
-
-//
-// Lists the whole list of the agencies providing data
-//
+/**
+ * @swagger
+ * /agencies:
+ *  get:
+ *    description: Lists the whole list of the agencies providing data
+ */
 globalRouter.get('/agencies', function (req, res, next) {
   cb.getAgencies(function (error, response, agencies) {
     if (error) {
@@ -57,6 +85,7 @@ function lookupAgencies(names) {
 }
 
 //
+// _TODO: REMOVEME
 // Lists the whole list of the routes for the agencies supplied
 // 
 globalRouter.get('/routes', function (req, res, next) {
@@ -88,9 +117,18 @@ agencyRouter.param('agency', function (req, res, next, id) {
 });
 
 
-// 
-// Returns list of the routes served by the particular agency
-//
+/**
+ * @swagger
+ * "/agency/{agencyName}/routes":
+ *  get:
+ *    description: Returns list of the routes served by the particular agency
+ *    parameters:
+ *      - name: agencyName
+ *        description: Name of the Agency providing transportation services requested
+ *        in: path
+ *        required: true
+ *        type: string
+ */
 agencyRouter.get('/:agency/routes', function (req, res, next) {
   cb.getRoutesForAgencies([ req.matched.agency ], function (error, response, routes) {
     if (error) {
@@ -123,9 +161,25 @@ agencyRouter.param('route', function (req, res, next, id) {
   next();
 });
 
-//
-// Returns the list of the stops for particular :route served by the :agency
-//
+/**
+ * @swagger
+ *
+ * "/agency/{agencyName}/{routeIDF}/stops":
+ *  get:
+ *    description: Returns the list of the stops for particular :route served by the :agency
+ *    parameters:
+ *      - name: agencyName
+ *        description: Name of the Agency providing transportation services requested
+ *        in: path
+ *        required: true
+ *        type: string
+ *      - name: routeIDF
+ *        description: Specifically formed route identifier having following form '{ROUTE-CODE}~{DIRECTION-CODE}' for the cases
+ *                     of directional routes and just '{ROUTE-CODE}' for the case of in-directional routes
+ *        in: path
+ *        required: true
+ *        type: string
+ */
 agencyRouter.get('/:agency/:route/stops', function (req, res, next) {
   cb.getStopsForRoutes([ req.matched.route ], [ req.matched.direction ], function (error, response, routes) {
     if (error) {
@@ -155,10 +209,30 @@ agencyRouter.param('stop', function (req, res, next, id) {
 });
 
 
-//
-// Returns the most accurate departure times for the :stop of the given :route
-// (served by the :agnecy) supplied
-//
+/**
+ * @swagger
+ *
+ * "/agency/{agencyName}/{routeIDF}/{stopCode}/departures":
+ *  get:
+ *    description: Returns the list of the stops for particular :route served by the :agency
+ *    parameters:
+ *      - name: agencyName
+ *        description: Name of the Agency providing transportation services requested
+ *        in: path
+ *        required: true
+ *        type: string
+ *      - name: routeIDF
+ *        description: Specifically formed route identifier having following form '{ROUTE-CODE}~{DIRECTION-CODE}' for the cases
+ *                     of directional routes and just '{ROUTE-CODE}' for the case of in-directional routes
+ *        in: path
+ *        required: true
+ *        type: string
+ *      - name: stopCode
+ *        description: Stop's code (for the given route)
+ *        in: path
+ *        required: true
+ *        type: string
+ */
 agencyRouter.get('/:agency/:route/:stop/departures', function (req, res, next) {
   cb.getDeparturesForStop(req.matched.stop, function (error, response, departures) {
     if (error) {
