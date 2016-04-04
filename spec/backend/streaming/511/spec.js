@@ -80,7 +80,7 @@ describe('511.com Streaming Backend (Compatibility) Suite', function () {
 
     var stub = {
       requestAPI: function (endpoint, params, cb) {
-        return cb(null, null, require('./fixtures/get-stops-for-routes-directional.json').value);
+        return cb(null, null, require('./fixtures/get-departures-for-stops.json').value);
       }
     };
 
@@ -88,7 +88,7 @@ describe('511.com Streaming Backend (Compatibility) Suite', function () {
 
     streaming.Backend.prototype.getDeparturesForStop.apply(stub, [ [ { route: { agency: { name: 'LAVTA' }, code: "15" }, code: "880225" } ], spy ]);
 
-    var response = require('./fixtures/get-stops-for-routes-directional-gold.json').value;
+    var response = require('./fixtures/get-departures-for-stops-gold.json').value;
 
     // NOTA BENE: Here, we do compare not the objects itselves but their respective JSON representations
     //            tu squeeze out all the `undefined`-ness
