@@ -31,7 +31,7 @@ var opts = {
 
 var swaggerSpec = swagger(opts);
 
-app.use('/swagger', express.static('./node_modules/swagger-ui/dist'));
+app.use('/', express.static('./node_modules/swagger-ui/dist'));
 app.get('/swagger.json', function(req, res) {
   res.setHeader('Content-Type', 'application/json');
   res.send(swaggerSpec);
