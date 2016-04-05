@@ -84,34 +84,11 @@ globalRouter.get('/agencies', function (req, res, next) {
 
 
 function lookupAgencies(names) {
-  // _TODO: Fix
   return names.map(function (n) {
     return { name: n }
   })
 }
 
-//
-// _TODO: REMOVEME
-// Lists the whole list of the routes for the agencies supplied
-// 
-globalRouter.get('/routes', function (req, res, next) {
-
-  var agencies = req.query['agencies'] ? req.query['agencies'].split('|') : [];
-
-  if (agencies.length == 0) {
-    next({ error: 'Missing agencies!' });
-    return
-  }
-
-  cb.getRoutesForAgencies(lookupAgencies(agencies), function (error, response, routes) {
-    if (error) {
-      next({ error: error });
-      return
-    }
-
-    res.send(routes);
-  });
-});
 
 // Parameters
 
@@ -148,7 +125,6 @@ agencyRouter.get('/:agency/routes', function (req, res, next) {
 });
 
 
-// _TODO: Fix
 function lookupRoutes(a, codes) {
   return codes.map(function (c) {
     return {
