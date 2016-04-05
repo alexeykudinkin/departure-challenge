@@ -227,7 +227,7 @@ Backend.prototype.getStopsForRoutes = function getStopsForRoutes(routes, directi
 function extractDepartureFrom(stop, departure) {
   if (_.isArray(departure))
     return departure.map(function (d) { return extractDepartureFrom(stop, d); });
-  else if (_.isNaN(departure))
+  else if (!_.isNumber(departure) && !parseInt(departure))
     return null;
 
   return new model.Departure(stop, departure);
