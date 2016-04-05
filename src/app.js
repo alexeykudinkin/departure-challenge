@@ -254,8 +254,8 @@ agencyRouter.get('/:agency/:route/:stop/departures', function (req, res, next) {
 // Error handling
 
 function APIErrorHandler(err, req, res, next) {
-  res .status(500)
-      .send(err);
+  res.status(500);
+  res.send(err);
 }
 
 
