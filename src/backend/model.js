@@ -1,8 +1,5 @@
 
-var mongoose = require('mongoose'); 
-
 var exports = module.exports;
-
 
 function Agency(name, directional, mode) {
   this.name = name;
