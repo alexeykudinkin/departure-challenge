@@ -123,7 +123,7 @@ function lookupAgencies(names) {
 // Parameters
 
 agencyRouter.param('agency', function (req, res, next, id) {
-  var name = id.replace('_', ' ');
+  var name = id.replace(/_/g, ' ');
   req.matched = _.extend(req.matched || {}, {
     agency: lookupAgencies([ name ])[0]
   });
