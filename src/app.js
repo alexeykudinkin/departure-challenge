@@ -110,8 +110,8 @@ agencyRouter.param('agency', function (req, res, next, id) {
  *    description: Returns list of the routes served by the particular agency
  *    parameters:
  *      - name: agencyName
- *        description:  Name of the Agency providing transportation services requested.
- *                      NOTA BENE: if agency's name comprises spaces replace them with underscores! ('AC Transit' -> `AC_Transit`)
+ *        description: "Name of the Agency providing transportation services requested
+ *                      (NOTA BENE: if agency's name comprises spaces replace them with underscores: 'AC Transit' -> 'AC_Transit')"
  *        in: path
  *        required: true
  *        type: string
