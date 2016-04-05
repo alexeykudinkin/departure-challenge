@@ -20,8 +20,10 @@ var opts = {
   swaggerDefinition: {
     info: {
       title: 'Departure Times',
+      description: 'This is Departure Times Challenge backing API',
       version: '0.0.1'
-    }
+    },
+    schemes: [ 'http' ]
   },
   apis: [ './src/app.js' ]
 };
@@ -63,7 +65,8 @@ stopsRouter.get(/\/nearest\/(\-?\d+(?:\.\d+)),(\-?\d+(?:\.\d+))$/, function (req
  * @swagger
  * /agencies:
  *  get:
- *    description: Lists the whole list of the agencies providing data
+ *    produces: application/json
+ *    description: Returns the whole list of the agencies providing data
  */
 globalRouter.get('/agencies', function (req, res, next) {
   cb.getAgencies(function (error, response, agencies) {
@@ -121,6 +124,7 @@ agencyRouter.param('agency', function (req, res, next, id) {
  * @swagger
  * "/agency/{agencyName}/routes":
  *  get:
+ *    produces: application/json
  *    description: Returns list of the routes served by the particular agency
  *    parameters:
  *      - name: agencyName
@@ -166,6 +170,7 @@ agencyRouter.param('route', function (req, res, next, id) {
  *
  * "/agency/{agencyName}/{routeIDF}/stops":
  *  get:
+ *    produces: application/json
  *    description: Returns the list of the stops for particular :route served by the :agency
  *    parameters:
  *      - name: agencyName
@@ -174,8 +179,8 @@ agencyRouter.param('route', function (req, res, next, id) {
  *        required: true
  *        type: string
  *      - name: routeIDF
- *        description: Specifically formed route identifier having following form '{ROUTE-CODE}~{DIRECTION-CODE}' for the cases
- *                     of directional routes and just '{ROUTE-CODE}' for the case of in-directional routes
+ *        description: Specifically formed route identifier having following form '{routeCode}~{directionCode}' for the cases
+ *                     of directional routes and just '{routeCode}' for the case of in-directional routes
  *        in: path
  *        required: true
  *        type: string
@@ -214,6 +219,7 @@ agencyRouter.param('stop', function (req, res, next, id) {
  *
  * "/agency/{agencyName}/{routeIDF}/{stopCode}/departures":
  *  get:
+ *    produces: application/json
  *    description: Returns the list of the stops for particular :route served by the :agency
  *    parameters:
  *      - name: agencyName
@@ -222,8 +228,8 @@ agencyRouter.param('stop', function (req, res, next, id) {
  *        required: true
  *        type: string
  *      - name: routeIDF
- *        description: Specifically formed route identifier having following form '{ROUTE-CODE}~{DIRECTION-CODE}' for the cases
- *                     of directional routes and just '{ROUTE-CODE}' for the case of in-directional routes
+ *        description: Specifically formed route identifier having following form '{routeCode}~{directionCode}' for the cases
+ *                     of directional routes and just '{routeCode}' for the case of in-directional routes
  *        in: path
  *        required: true
  *        type: string
