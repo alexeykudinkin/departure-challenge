@@ -66,8 +66,25 @@ globalRouter.get('/swagger.json', function(req, res) {
 });
 
 
-// Stops endpoints
-
+/**
+ * @swagger
+ * /stops/nearest/{lat},{lng}:
+ *  get:
+ *    produces:
+ *      - application/json
+ *    description: "Returns the 5 closest stops from the position given in the form: '/nearest/{latitude},{longitude}'"
+ *    parameters:
+ *      - name: lat
+ *        description: Latitude
+ *        in: path
+ *        required: true
+ *        type: number
+ *      - name: lng
+ *        description: Longitude
+ *        in: path
+ *        required: true
+ *        type: number
+ */
 stopsRouter.get(/\/nearest\/(\-?\d+(?:\.\d+)),(\-?\d+(?:\.\d+))$/, function (req, res) {
   var lat = req.params['0'];
   var lng = req.params['1'];
@@ -80,7 +97,8 @@ stopsRouter.get(/\/nearest\/(\-?\d+(?:\.\d+)),(\-?\d+(?:\.\d+))$/, function (req
  * @swagger
  * /agencies:
  *  get:
- *    produces: application/json
+ *    produces:
+ *      - application/json
  *    description: Returns the whole list of the agencies providing data
  */
 globalRouter.get('/agencies', function (req, res, next) {
@@ -117,7 +135,8 @@ agencyRouter.param('agency', function (req, res, next, id) {
  * @swagger
  * "/agency/{agencyName}/routes":
  *  get:
- *    produces: application/json
+ *    produces:
+ *      - application/json
  *    description: Returns list of the routes served by the particular agency
  *    parameters:
  *      - name: agencyName
@@ -163,7 +182,8 @@ agencyRouter.param('route', function (req, res, next, id) {
  *
  * "/agency/{agencyName}/{routeIDF}/stops":
  *  get:
- *    produces: application/json
+ *    produces:
+ *      - application/json
  *    description: Returns the list of the stops for particular :route served by the :agency
  *    parameters:
  *      - name: agencyName
@@ -212,7 +232,8 @@ agencyRouter.param('stop', function (req, res, next, id) {
  *
  * "/agency/{agencyName}/{routeIDF}/{stopCode}/departures":
  *  get:
- *    produces: application/json
+ *    produces:
+ *      - application/json
  *    description: Returns the list of the stops for particular :route served by the :agency
  *    parameters:
  *      - name: agencyName
