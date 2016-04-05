@@ -93,8 +93,9 @@ function lookupAgencies(names) {
 // Parameters
 
 agencyRouter.param('agency', function (req, res, next, id) {
+  var name = id.replace('_', ' ');
   req.matched = _.extend(req.matched || {}, {
-    agency: lookupAgencies([ id ])[0]
+    agency: lookupAgencies([ name ])[0]
   });
   next();
 });
@@ -108,7 +109,8 @@ agencyRouter.param('agency', function (req, res, next, id) {
  *    description: Returns list of the routes served by the particular agency
  *    parameters:
  *      - name: agencyName
- *        description: Name of the Agency providing transportation services requested
+ *        description:  Name of the Agency providing transportation services requested.
+ *                      NOTA BENE: if agency's name comprises spaces replace them with underscores! ('AC Transit' -> `AC_Transit`)
  *        in: path
  *        required: true
  *        type: string
