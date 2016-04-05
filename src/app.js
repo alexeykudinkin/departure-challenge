@@ -84,6 +84,11 @@ globalRouter.get('/swagger.json', function(req, res) {
  *        in: path
  *        required: true
  *        type: number
+ *    responses:
+ *      200:
+ *        description: Ok
+ *      500:
+ *        description: Error occurred
  */
 stopsRouter.get(/\/nearest\/(\-?\d+(?:\.\d+)),(\-?\d+(?:\.\d+))$/, function (req, res) {
   var lat = req.params['0'];
@@ -100,6 +105,11 @@ stopsRouter.get(/\/nearest\/(\-?\d+(?:\.\d+)),(\-?\d+(?:\.\d+))$/, function (req
  *    produces:
  *      - application/json
  *    description: Returns the whole list of the agencies providing data
+ *    responses:
+ *      200:
+ *        description: Ok
+ *      500:
+ *        description: Error occurred
  */
 globalRouter.get('/agencies', function (req, res, next) {
   cb.getAgencies(function (error, response, agencies) {
@@ -137,7 +147,7 @@ agencyRouter.param('agency', function (req, res, next, id) {
  *  get:
  *    produces:
  *      - application/json
- *    description: Returns list of the routes served by the particular agency
+ *    description: Returns list of the routes served by the {agencyName}
  *    parameters:
  *      - name: agencyName
  *        description: "Name of the Agency providing transportation services requested
@@ -145,6 +155,11 @@ agencyRouter.param('agency', function (req, res, next, id) {
  *        in: path
  *        required: true
  *        type: string
+ *    responses:
+ *      200:
+ *        description: Ok
+ *      500:
+ *        description: Error occurred
  */
 agencyRouter.get('/:agency/routes', function (req, res, next) {
   cb.getRoutesForAgencies([ req.matched.agency ], function (error, response, routes) {
@@ -184,7 +199,7 @@ agencyRouter.param('route', function (req, res, next, id) {
  *  get:
  *    produces:
  *      - application/json
- *    description: Returns the list of the stops for particular :route served by the :agency
+ *    description: Returns the list of the stops for particular {routeIDF} served by the {agencyName}
  *    parameters:
  *      - name: agencyName
  *        description: Name of the Agency providing transportation services requested
@@ -197,6 +212,11 @@ agencyRouter.param('route', function (req, res, next, id) {
  *        in: path
  *        required: true
  *        type: string
+ *    responses:
+ *      200:
+ *        description: Ok
+ *      500:
+ *        description: Error occurred
  */
 agencyRouter.get('/:agency/:route/stops', function (req, res, next) {
   cb.getStopsForRoutes([ req.matched.route ], [ req.matched.direction ], function (error, response, routes) {
@@ -234,7 +254,7 @@ agencyRouter.param('stop', function (req, res, next, id) {
  *  get:
  *    produces:
  *      - application/json
- *    description: Returns the list of the stops for particular :route served by the :agency
+ *    description: Returns the estimates for the departure times for the particular {stopCode} of the {routeIDF} served by the {agencyName}
  *    parameters:
  *      - name: agencyName
  *        description: Name of the Agency providing transportation services requested
@@ -252,6 +272,11 @@ agencyRouter.param('stop', function (req, res, next, id) {
  *        in: path
  *        required: true
  *        type: string
+ *    responses:
+ *      200:
+ *        description: Ok
+ *      500:
+ *        description: Error occurred
  */
 agencyRouter.get('/:agency/:route/:stop/departures', function (req, res, next) {
   cb.getDeparturesForStop(req.matched.stop, function (error, response, departures) {
