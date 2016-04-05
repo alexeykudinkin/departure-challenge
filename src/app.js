@@ -23,7 +23,8 @@ var opts = {
       description: 'This is Departure Times Challenge backing API',
       version: '0.0.1'
     },
-    schemes: [ 'http' ]
+    schemes: [ 'http' ],
+    basePath: '/'
   },
   apis: [ './src/app.js' ]
 };
