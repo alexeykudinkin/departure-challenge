@@ -15,7 +15,7 @@ var extensions  = require('../../util/ext');
 var exports = module.exports;
 
 const BASE_API_URL  = 'http://services.my511.org/Transit2.0';
-const SECRET        = process.env.P511_API_SECRECT;
+const SECRET        = process.env.P511_API_SECRET;
 
 
 function Backend() {}
