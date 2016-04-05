@@ -35,4 +35,4 @@ Also, constant problems being observed related to the 511's abilities to provide
 
 Comments
 --------
-There are almost no boilerplate out there. 100% of code is hand-crafted.
+There are almost no boilerplate out there. 100% of code (under the directory `./src`) is hand-crafted.
