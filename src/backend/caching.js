@@ -35,7 +35,7 @@ const CACHING_POLICIES = {
   getDeparturesForStop: cachingPolicy(seconds(30))
 };
 
-mongoose.connect('mongodb://localhost:27017/transportation');
+mongoose.connect(process.env.MONGOLAB_URI);
 
 var Agency    = mongoose.model('Agency',    new mongoose.Schema(model.Agency.schema,    { timestamps: true }));
 var Route     = mongoose.model('Route',     new mongoose.Schema(model.Route.schema,     { timestamps: true }));

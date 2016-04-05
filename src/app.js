@@ -23,7 +23,7 @@ var opts = {
       description: 'This is Departure Times Challenge backing API',
       version: '0.0.1'
     },
-    schemes: [ 'http' ],
+    schemes: [ 'http', 'https' ],
     basePath: '/'
   },
   apis: [ './src/app.js' ]
@@ -305,6 +305,7 @@ function APIErrorHandler(err, req, res, next) {
 app.use('/', globalRouter);
 app.use(APIErrorHandler);
 
-app.listen(3000, function () {
-  console.log("Woo-hoo! Listening on the port 3000!")
+var port = process.env.PORT || 8080;
+app.listen(port, function () {
+  console.log("Woo-hoo! Listening on the port " + port + "!")
 });

@@ -15,9 +15,7 @@ var extensions  = require('../../util/ext');
 var exports = module.exports;
 
 const BASE_API_URL  = 'http://services.my511.org/Transit2.0';
-
-// _TODO: Extract token to ENV
-const SECRET        = '8fc49edc-a1d3-4e2c-b177-ee8aae6e53a7';
+const SECRET        = process.env.P511_API_SECRECT;
 
 
 function Backend() {}
