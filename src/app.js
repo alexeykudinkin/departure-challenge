@@ -31,13 +31,6 @@ var opts = {
 
 var swaggerSpec = swagger(opts);
 
-app.use('/', express.static('./node_modules/swagger-ui/dist'));
-app.get('/swagger.json', function(req, res) {
-  res.setHeader('Content-Type', 'application/json');
-  res.send(swaggerSpec);
-});
-
-
 // Setup backends
 
 var b   = new streaming.Backend();
@@ -53,6 +46,24 @@ var stopsRouter   = express.Router({ mergeParams: true });
 
 globalRouter.use('/stops',  stopsRouter);
 globalRouter.use('/agency', agencyRouter);
+
+// Bootstrap Swagger
+
+globalRouter.get('/', function (req, res, next) {
+  if (req.originalUrl === '/' && !req.query.url) {
+    res.redirect(req.originalUrl + (_.isEmpty(req.query) ? '?' : '&') + 'url=/swagger.json');
+    return
+  }
+
+  next()
+});
+
+globalRouter.use('/', express.static('./node_modules/swagger-ui/dist'));
+
+globalRouter.get('/swagger.json', function(req, res) {
+  res.setHeader('Content-Type', 'application/json');
+  res.send(swaggerSpec);
+});
 
 
 // Stops endpoints
