@@ -56,9 +56,12 @@ globalRouter.use('/agency', agencyRouter);
 
 // Stops endpoints
 
-// _TODO: Fix
 stopsRouter.get(/\/nearest\/(\-?\d+(?:\.\d+)),(\-?\d+(?:\.\d+))$/, function (req, res) {
-  res.send(req.params);
+  var lat = req.params['0'];
+  var lng = req.params['1'];
+
+  res.status(500);
+  res.send({ error: "Unfortunately we can't geo-locate nearest stops right now! Your position is (" + lat + ", " + lng + ")" });
 });
 
 /**
