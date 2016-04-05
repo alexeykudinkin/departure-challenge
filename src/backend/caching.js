@@ -196,17 +196,17 @@ Backend.prototype.getDeparturesForStop = function getDeparturesForStop(stop, cal
   queryStorageOrRefill(
     Departure,
     Departure .where('stop')
-              .e(stop.code),
+              .eq(stop.code),
 
     CACHING_POLICIES['getDeparturesForStop'],
 
     function (store, cb) {
-      self.backing.getDeparturesForStop(stop, function (err, response, departures) {
-        if (err) return cb(err, response);
+      self.backing.getDeparturesForStop(stop, function (err, res, departures) {
+        if (err) return cb(err, res);
 
         store(
           departures.map(function (d) {
-            return _.extend(d, { stop: stop.code })
+            return _.extend(d, { stop: stop.code, route: stop.route.code, direction: stop.direction })
           })
         );
       });
@@ -214,7 +214,6 @@ Backend.prototype.getDeparturesForStop = function getDeparturesForStop(stop, cal
 
     function (err, res, departures) {
       if (err) return callback(err, res);
-
       callback(null, null, departures.map(function (data) {
         return new model.Departure(data.stop, data.time);
       }));

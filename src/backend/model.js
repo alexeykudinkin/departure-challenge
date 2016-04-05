@@ -59,6 +59,8 @@ function Departure(stop, time) {
 
 Departure.schema = {
   stop: String,
+  route: String,
+  direction: String,
   time: Number
 };
 
