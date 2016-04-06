@@ -29,7 +29,10 @@ Unfortunately only one of the selected SF Transportation Data Providers were acc
 Nextbus was constantly delivering 'Access denied' for any request made (even nextbus.com is unavailable from out here).
 
 Though, 511's API has downsides of its own too: it doesn't provide any flavour of spatial coordinates for the stops served,
-therefore greatly impeding my abilities to provide API which finds among the full list of stops the closest ones to the User (geolocalising them).
+therefore greatly impeding my abilities to provide API which finds among the full list of stops the closest ones to the User 
+(geo-localizing them). Nevertheless, do 511 provide spatial coordinates (or be there any other way to obtain them), the
+task of fast (spatial) lookup (for the geo-localization purposes) would be solved by the means of the MongoDB's native 
+*spatial* indexes (https://docs.mongodb.org/manual/applications/geospatial-indexes/).
 
 Also, constant problems being observed related to the 511's abilities to provide departure times itselves.
 
