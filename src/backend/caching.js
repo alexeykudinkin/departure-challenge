@@ -47,6 +47,10 @@ function Backend(backing) {
 }
 
 function queryStorageOrRefill(model, query, cachingPolicy, refill, cb) {
+  // Clone query to re-execute it upon successful refill
+  // Yep, shallow-clone is enough
+  var requery = _.clone(query);
+
   query .where('updatedAt').gte(cachingPolicy())
         .exec(function (err, values) {
           if (err) return cb(err);
@@ -82,7 +86,11 @@ function queryStorageOrRefill(model, query, cachingPolicy, refill, cb) {
 
                     function (err) {
                       if (err) return cb(err);
-                      cb(null, null, values);
+
+                      requery.exec(function (err, values) {
+                        if (err) return cb(err);
+                        cb(null, null, values);
+                      })
                     }
                   );
                 }, cb);
@@ -196,7 +204,11 @@ Backend.prototype.getDeparturesForStop = function getDeparturesForStop(stop, cal
   queryStorageOrRefill(
     Departure,
     Departure .where('stop')
-              .eq(stop.code),
+              .eq(stop.code)
+              .where('route')
+              .eq(stop.route.code)
+              .where('direction')
+              .eq(stop.direction),
 
     CACHING_POLICIES['getDeparturesForStop'],
 
@@ -206,7 +218,7 @@ Backend.prototype.getDeparturesForStop = function getDeparturesForStop(stop, cal
 
         store(
           departures.map(function (d) {
-            return _.extend(d, { stop: stop.code, route: stop.route.code, direction: stop.direction })
+            return _.extend(d, { stop: d.stop.code, route: d.stop.route.code, direction: d.stop.direction })
           })
         );
       });
@@ -215,7 +227,7 @@ Backend.prototype.getDeparturesForStop = function getDeparturesForStop(stop, cal
     function (err, res, departures) {
       if (err) return callback(err, res);
       callback(null, null, departures.map(function (data) {
-        return new model.Departure(data.stop, data.time);
+        return new model.Departure({ route: data.route, code: data.stop, direction: data.direction }, data.time);
       }));
     });
 };

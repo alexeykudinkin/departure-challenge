@@ -230,17 +230,19 @@ agencyRouter.get('/:agency/:route/stops', function (req, res, next) {
 });
 
 
-function lookupStops(route, codes) {
+function lookupStops(route, direction, codes) {
   return codes.map(function (c) {
     return {
-      code: c
+      code: c,
+      route: route,
+      direction: direction
     };
   });
 }
 
 agencyRouter.param('stop', function (req, res, next, id) {
   req.matched = _.extend(req.matched || {}, {
-    stop: lookupStops(req.matched.route, [ id ])[0]
+    stop: lookupStops(req.matched.route, req.matched.direction, [ id ])[0]
   });
 
   next();
